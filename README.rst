@@ -6,4 +6,4 @@ screenfetch-ubuntu
 
 screenshot:
 
-.. image:: ./screenshot.png
+.. image:: ./screenshot.jpg
