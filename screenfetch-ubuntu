@@ -20,7 +20,7 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-display=( distro host kernel uptime mem disk )
+display=( host distro kernel uptime cpu gpu mem disk )
 
 c0="\033[0m" # Reset Text
 bold="\033[1m" # Bold Text
@@ -43,23 +43,20 @@ getColor() {
   echo "${color_ret}"
 }
 
+# Host detection
+detecthost () {
+  myHost=${HOSTNAME}
+}
 
 # Distro detection
 detectdistro () {
   distro=$(lsb_release -ds)
-  asc_distro=$(lsb_release -is)
-}
-
-# Host detection
-detecthost () {
-  myHost=${HOSTNAME}
 }
 
 # Kernel detection
 detectkernel () {
   kernel=$(uname -srm)
 }
-
 
 # Uptime detection
 detectuptime () {
@@ -78,6 +75,15 @@ detectuptime () {
   fi
 }
 
+# CPU detection
+detectcpu () {
+  cpu=$(echo $(lscpu | grep -i "Model name" | cut -d : -f 2))
+}
+
+# GPU detection
+detectgpu () {
+  gpu=$(nvidia-settings -t -q gpus | grep \( | sed 's/.*(\(.*\))/\1/')
+}
 
 # Disk Usage detection
 detectdisk () {
@@ -88,7 +94,6 @@ detectdisk () {
     diskusage="${diskused} / ${disktotal} (${diskusedper})"
     diskusage_verbose=$(sed 's/%/%%/' <<< $diskusage)
 }
-
 
 # Memory detection
 detectmem () {
@@ -172,10 +177,15 @@ infoDisplay () {
         out_array=( "${out_array[@]}" "$mykernel" );
         ((display_index++));
     fi
-    if [[ "${display[@]}" =~ "uptime" ]]; then
-        myuptime=$(echo -e "$labelcolor Uptime:$textcolor $uptime");
-        out_array=( "${out_array[@]}" "$myuptime" );
-        ((display_index++));
+    if [[ "${display[@]}" =~ "cpu" ]]; then
+        mycpu=$(echo -e "$labelcolor CPU:$textcolor $cpu");
+        out_array=( "${out_array[@]}" "$mycpu" )
+        ((display_index++))
+    fi
+    if [[ "${display[@]}" =~ "gpu" ]]; then
+        mygpu=$(echo -e "$labelcolor GPU:$textcolor $gpu");
+        out_array=( "${out_array[@]}" "$mygpu" )
+        ((display_index++))
     fi
     if [[ "${display[@]}" =~ "disk" ]]; then
         mydisk=$(echo -e "$labelcolor Disk:$textcolor $diskusage");
@@ -185,6 +195,11 @@ infoDisplay () {
     if [[ "${display[@]}" =~ "mem" ]]; then
         mymem=$(echo -e "$labelcolor RAM:$textcolor $mem");
         out_array=( "${out_array[@]}" "$mymem" );
+        ((display_index++));
+    fi
+    if [[ "${display[@]}" =~ "uptime" ]]; then
+        myuptime=$(echo -e "$labelcolor Uptime:$textcolor $uptime");
+        out_array=( "${out_array[@]}" "$myuptime" );
         ((display_index++));
     fi
 
